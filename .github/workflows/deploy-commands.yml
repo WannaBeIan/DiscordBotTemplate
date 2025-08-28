@@ -17,7 +17,7 @@ jobs:
       DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
       DEFAULT_GUILD_ID: ${{ github.event.inputs.guild_id }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: 20
