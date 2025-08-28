@@ -1,6 +1,6 @@
 {
   "name": "discord-bot-template",
-  "version": "0.2-release",
+  "version": "0.2.4-release",
   "type": "module",
   "private": true,
   "engines": {

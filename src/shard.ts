@@ -30,4 +30,4 @@ manager.on('shardCreate', s => {
   s.on('death', () => console.error(`Shard ${s.id} died`))
 })
 
-await manager.spawn({ amount: 2 })
+await manager.spawn({ amount: 5 })

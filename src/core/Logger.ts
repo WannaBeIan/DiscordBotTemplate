@@ -4,6 +4,7 @@ type L = "debug" | "info" | "warn" | "error"
 
 export class Logger {
   private logger: pino.Logger
+
   constructor(level: L = process.env.NODE_ENV === "production" ? "info" : "debug") {
     const dev = process.env.NODE_ENV !== "production"
     this.logger = pino({
@@ -25,13 +26,18 @@ export class Logger {
     })
   }
 
-  context(bindings: Record<string, unknown>) {
+  /** Bind context data (e.g., shard info) to every log line */
+  public context(bindings: Record<string, unknown>): this {
     this.logger = this.logger.child(bindings)
+    return this
   }
 
   private log(level: L, input: unknown, msg?: string) {
     if (input instanceof Error) {
-      this.logger[level]({ err: { name: input.name, message: input.message, stack: input.stack } }, msg ?? input.message)
+      this.logger[level](
+        { err: { name: input.name, message: input.message, stack: input.stack } },
+        msg ?? input.message
+      )
     } else if (typeof input === "string") {
       this.logger[level](input)
     } else if (input && typeof input === "object") {
@@ -46,3 +52,5 @@ export class Logger {
   warn(input: unknown, msg?: string) { this.log("warn", input, msg) }
   error(input: unknown, msg?: string) { this.log("error", input, msg) }
 }
+
+export const logger = new Logger()

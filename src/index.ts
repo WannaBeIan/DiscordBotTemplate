@@ -1,31 +1,27 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import "dotenv/config"
+import { logger } from "./core/Logger"
 import { loadEnv } from "./core/Env"
 import { ExtendedClient } from "./core/ExtendedClient"
-import { loadCommands, loadEvents, loadJobs, loadModules, loadComponents } from "./core/Loader"
+import { loadCommands, loadEvents, loadModules, loadJobs, loadComponents } from "./core/Loader"
 import { validateDiscordToken } from "./core/TokenGuard"
 import { metrics } from "./core/Metrics"
-
-function envPort(key: string, fallback: number) {
-  const raw = process.env[key]
-  if (!raw) return fallback
-  const cleaned = raw.trim().replace(/^['"]|['"]$/g, '').replace(/\s*#.*$/, '')
-  const n = parseInt(cleaned, 10)
-  return Number.isFinite(n) && n >= 1 && n <= 65535 ? n : fallback
-}
-
-function currentShardId(client: any) {
-  const ids = client?.shard?.ids
-  if (Array.isArray(ids) && ids.length) return ids[0]
-  const envRaw = String(process.env.SHARD_LIST ?? '').split(',')[0]?.trim()
-  const n = Number(envRaw)
-  return Number.isFinite(n) && n >= 0 ? n : 0
-}
 
 async function main() {
   const env = loadEnv()
   const token = validateDiscordToken(env.DISCORD_TOKEN)
   const client = new ExtendedClient(env)
+
+  function shardIdNow(): number {
+    const ids = client?.shard?.ids
+    if (Array.isArray(ids) && ids.length) return Number(ids[0])
+    const first = (process.env.SHARD_LIST || "")
+      .split(",")
+      .map(s => s.trim())
+      .find(s => /^\d+$/.test(s))
+    return first ? Number(first) : 0
+  }
+
+  client.logger.context({ shard: `S${shardIdNow()}` })
 
   await loadCommands(client)
   await loadEvents(client)
@@ -38,10 +34,10 @@ async function main() {
   process.on('SIGINT', () => shutdown(client))
   process.on('SIGTERM', () => shutdown(client))
 
-  client.once('clientReady', async () => {
-    const sid = currentShardId(client)
+  client.once("clientReady", async () => {
+    const sid = client.shard?.ids?.[0] ?? 0
     if (sid === 0) {
-      const port = envPort('METRICS_PORT', 3100)
+      const port = Number(process.env.METRICS_PORT || 3100)
       await metrics.start(client, port, { shardId: sid, perShard: false })
     }
   })
