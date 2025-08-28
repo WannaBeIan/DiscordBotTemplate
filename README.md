@@ -371,9 +371,7 @@ npm run dev
 
 ## License
 
-MIT — see `LICENSE`.
-
-```
+MIT — see [LICENSE](https://github.com/WannaBeIan/DiscordBotTemplate/LICENSE).
 
 
  
