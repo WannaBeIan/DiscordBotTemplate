@@ -1,0 +1,26 @@
+name: deploy-commands
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: guild or global
+        required: true
+        default: guild
+      guild_id:
+        description: required if target=guild
+        required: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+      DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
+      DEFAULT_GUILD_ID: ${{ github.event.inputs.guild_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: node --loader tsx src/deploy/deploy-commands.ts --${{ github.event.inputs.target }}
